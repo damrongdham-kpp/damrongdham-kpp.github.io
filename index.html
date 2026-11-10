@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Senior Voice Access</title>
+  <style>
+    :root{--navy:#17324d;--blue:#1769aa;--bg:#f4f7fa;--line:#d7e0e8;--text:#18232d;--muted:#536575;--green:#176b45;--red:#a32929}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;font-size:19px;line-height:1.55}
+    main{max-width:850px;margin:0 auto;padding:18px 14px 40px}.brand{background:var(--navy);color:white;padding:22px;border-radius:18px;margin-bottom:16px}.brand h1{font-size:29px;margin:0 0 5px}.brand p{margin:0;font-size:17px}
+    .card{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 2px 8px #1020300a}.card h2{font-size:23px;margin:0 0 12px;color:var(--navy)}
+    label{display:block;font-weight:700;margin:15px 0 6px}.hint{font-size:15px;color:var(--muted);margin:4px 0}.fieldrow{display:flex;gap:8px;align-items:stretch}input,textarea,select{font:inherit;width:100%;padding:13px;border:2px solid #b9c8d5;border-radius:10px;background:#fff;min-height:54px;color:var(--text)}textarea{min-height:125px;resize:vertical}.fieldrow input,.fieldrow textarea{flex:1;min-width:0}.mic{min-width:58px;border:0;border-radius:10px;background:#e4eff9;color:#104c7c;font-size:25px;cursor:pointer}.mic[aria-pressed="true"]{background:#ffe4e4;color:#9a2020}.permission{margin-top:12px;width:100%}.permission:disabled{opacity:.65;cursor:default}
+    button.primary,button.secondary{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px 18px;cursor:pointer;min-height:56px}.primary{background:var(--blue);color:white}.secondary{background:#e8eef3;color:#18334b}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.actions button{flex:1}.notice{background:#fff8df;border:1px solid #e8d38b;border-radius:12px;padding:12px;font-size:16px}.status{padding:13px;border-radius:10px;margin-top:12px;display:none}.status.ok{display:block;background:#e8f5ed;color:#155d37}.status.err{display:block;background:#fff0f0;color:#8b2020}.consent{display:flex;gap:12px;align-items:flex-start;font-size:17px}.consent input{width:25px;height:25px;min-height:25px;margin-top:4px}.small{font-size:14px;color:var(--muted)}.sr-only{position:absolute;left:-9999px}
+    @media(max-width:560px){body{font-size:18px}.brand h1{font-size:25px}.card{padding:14px}.fieldrow{gap:6px}.mic{min-width:52px}.actions{flex-direction:column}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <h1>Senior Voice Access</h1>
+    <p>ระบบช่วยรับเรื่องร้องทุกข์ด้วยเสียง ศูนย์ดำรงธรรมจังหวัดกำแพงเพชร</p>
+  </header>
+
+  <section class="card">
+    <h2>วิธีใช้งาน</h2>
+    <p>กรอกข้อมูลด้วยการพิมพ์หรือกดปุ่มไมโครโฟน 🎙️ เพื่อพูด ระบบจะเปลี่ยนเสียงเป็นข้อความ ท่านสามารถฟังข้อความที่กรอกและแก้ไขก่อนส่งได้</p>
+    <div class="notice">การใช้ไมโครโฟนอาจส่งเสียงไปประมวลผลผ่านบริการของเบราว์เซอร์หรือผู้ให้บริการรู้จำเสียง ระบบนี้ไม่บันทึกไฟล์เสียงไว้ใน Google Sheets โปรดหลีกเลี่ยงการพูดข้อมูลลับหรือข้อมูลบัตรประชาชน</div>
+    <div id="support" class="hint" role="status" aria-live="polite">กำลังตรวจสอบความพร้อมของระบบ…</div>
+    <button type="button" class="primary permission" id="enableMic">🎙️ ทดสอบไมโครโฟน</button>
+    <p class="hint">เว็บไซต์นี้เปิดไมโครโฟนจากเบราว์เซอร์โดยตรง กรุณาเปิดผ่าน Chrome และอนุญาตไมโครโฟนเมื่อมีหน้าต่างแจ้งเตือน</p>
+    <button type="button" class="secondary" onclick="speak('ยินดีต้อนรับสู่ระบบ Senior Voice Access กรุณากรอกข้อมูลตามลำดับ หากต้องการพูดให้กดปุ่มไมโครโฟน และตรวจสอบข้อมูลก่อนส่งคำร้อง')">🔊 ฟังคำแนะนำ</button>
+  </section>
+
+  <form id="complaintForm" class="card">
+    <h2>ข้อมูลผู้ร้องทุกข์</h2>
+    <label for="prefix">คำนำหน้า *</label>
+    <select id="prefix" required><option value="">เลือกคำนำหน้า</option><option>นาย</option><option>นาง</option><option>นางสาว</option><option>อื่น ๆ</option></select>
+    <label for="firstName">ชื่อ *</label><div class="fieldrow"><input id="firstName" autocomplete="given-name" required><button class="mic" type="button" data-target="firstName" aria-label="พูดชื่อ">🎙️</button></div>
+    <label for="lastName">นามสกุล *</label><div class="fieldrow"><input id="lastName" autocomplete="family-name" required><button class="mic" type="button" data-target="lastName" aria-label="พูดนามสกุล">🎙️</button></div>
+    <label for="phone">หมายเลขโทรศัพท์ *</label><input id="phone" type="tel" inputmode="numeric" maxlength="10" placeholder="0XXXXXXXXX" required><p class="hint">ใช้สำหรับติดต่อกลับ โปรดตรวจสอบหมายเลขให้ถูกต้อง</p>
+
+    <h2 style="margin-top:24px">ที่อยู่และสถานที่เกิดเหตุ</h2>
+    <label for="houseNo">บ้านเลขที่</label><div class="fieldrow"><input id="houseNo"><button class="mic" type="button" data-target="houseNo" aria-label="พูดบ้านเลขที่">🎙️</button></div>
+    <label for="moo">หมู่ที่</label><input id="moo">
+    <label for="road">ถนน</label><div class="fieldrow"><input id="road"><button class="mic" type="button" data-target="road" aria-label="พูดชื่อถนน">🎙️</button></div>
+    <label for="subdistrict">ตำบล</label><div class="fieldrow"><input id="subdistrict"><button class="mic" type="button" data-target="subdistrict" aria-label="พูดชื่อตำบล">🎙️</button></div>
+    <label for="district">อำเภอ</label><div class="fieldrow"><input id="district"><button class="mic" type="button" data-target="district" aria-label="พูดชื่ออำเภอ">🎙️</button></div>
+    <label for="province">จังหวัด</label><input id="province" value="กำแพงเพชร">
+    <label for="postcode">รหัสไปรษณีย์</label><input id="postcode" inputmode="numeric" maxlength="5">
+
+    <h2 style="margin-top:24px">รายละเอียดเรื่องร้องทุกข์</h2>
+    <label for="privacy">การเปิดเผยข้อมูล *</label>
+    <select id="privacy" required><option value="">กรุณาเลือก</option><option value="ปกปิดข้อมูล">ประสงค์ปกปิดข้อมูล</option><option value="เปิดเผยข้อมูล">ยินยอมเปิดเผยข้อมูลตามกระบวนการ</option></select>
+    <label for="title">ชื่อเรื่อง *</label><div class="fieldrow"><input id="title" required><button class="mic" type="button" data-target="title" aria-label="พูดชื่อเรื่อง">🎙️</button></div>
+    <label for="mainType">ประเภทเรื่องหลัก *</label><div class="fieldrow"><input id="mainType" required><button class="mic" type="button" data-target="mainType" aria-label="พูดประเภทเรื่องหลัก">🎙️</button></div>
+    <label for="subType">ประเภทเรื่องรอง *</label><div class="fieldrow"><input id="subType" required><button class="mic" type="button" data-target="subType" aria-label="พูดประเภทเรื่องรอง">🎙️</button></div>
+    <label for="affected">ผู้ได้รับความเดือดร้อน</label><select id="affected"><option>ตนเอง</option><option>ครอบครัว</option><option>กลุ่มบุคคล</option><option>ประชาชนทั่วไป</option></select>
+    <label for="detail">รายละเอียดเรื่องร้องทุกข์ *</label><div class="fieldrow"><textarea id="detail" required></textarea><button class="mic" type="button" data-target="detail" aria-label="พูดรายละเอียดเรื่องร้องทุกข์">🎙️</button></div>
+    <label for="request">ความประสงค์หรือสิ่งที่ต้องการให้ช่วยเหลือ *</label><div class="fieldrow"><textarea id="request" required></textarea><button class="mic" type="button" data-target="request" aria-label="พูดความประสงค์">🎙️</button></div>
+
+    <label class="consent" for="consent"><input type="checkbox" id="consent" required><span>ข้าพเจ้ายืนยันว่าได้อ่านข้อมูลและยินยอมให้ศูนย์ดำรงธรรมจังหวัดกำแพงเพชรเก็บ ใช้ และดำเนินการเกี่ยวกับข้อมูลที่จำเป็นเพื่อรับเรื่องร้องทุกข์ตามวัตถุประสงค์ที่แจ้งไว้ *</span></label>
+    <p class="small">ข้อความนี้เป็นร่างสำหรับทดสอบ ต้องให้หน่วยงานตรวจสอบและอนุมัติประกาศความเป็นส่วนตัวและฐานกฎหมายก่อนเปิดใช้จริง</p>
+
+    <input class="sr-only" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="actions">
+      <button type="button" class="secondary" id="readBack">🔊 อ่านทวนข้อมูล</button>
+      <button type="submit" class="primary" id="submitBtn">ยืนยันส่งคำร้อง</button>
+    </div>
+    <div id="result" class="status" role="status" aria-live="polite"></div>
+    <div class="actions" id="printActions" hidden><button type="button" class="secondary" id="printComplaint">🖨️ พิมพ์เอกสารรับเรื่อง (A4)</button></div>
+  </form>
+  <p class="small">หมายเหตุ: ระบบนี้เป็นช่องทางรับข้อมูลเบื้องต้น เลขรับเรื่องอย่างเป็นทางการจะกำหนดโดยเจ้าหน้าที่ภายหลังการตรวจสอบ โปรดเก็บหลักฐานข้อความยืนยันการส่งไว้</p>
+</main>
+<script>
+  // Set this to the deployed Google Apps Script Web App URL ending in /exec.
+  const GAS_WEB_APP_URL = 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+  const $ = id => document.getElementById(id);
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let activeRecognition = null;
+  let activeButton = null;
+  let lastSubmittedPayload = null;
+  let lastReceivedAt = "";
+
+  function speak(text) {
+    if (!('speechSynthesis' in window)) { alert('อุปกรณ์นี้ไม่รองรับการอ่านออกเสียง'); return; }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'th-TH'; utterance.rate = 0.88; utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function setSupport(message) {
+    $('support').textContent = message || (SpeechRecognition
+      ? 'รองรับการรู้จำเสียงในเบราว์เซอร์นี้ แตะ “ทดสอบไมโครโฟน” แล้วพูดเพื่อเริ่มใช้งาน'
+      : 'เบราว์เซอร์นี้ไม่รองรับการถอดเสียง กรุณาพิมพ์ข้อมูลแทน หรือเปิดลิงก์ด้วย Google Chrome รุ่นปัจจุบัน');
+  }
+
+  // Android Chrome: call SpeechRecognition directly from the user's tap.
+  // Do not preflight with getUserMedia(), because embedded Apps Script frames
+  // may reject that separate API with NotAllowedError even when speech service
+  // can be invoked by the browser's own permission flow.
+  function showMicError(errorCode) {
+    const prefix = 'ระบบรับเสียงไม่สำเร็จ (' + errorCode + '). ';
+    const guidance = {
+      'not-allowed': 'โปรดเปิดลิงก์ Web App ในแอป Chrome โดยตรง (ไม่เปิดจาก LINE, Facebook หรือหน้าต่างฝังในเว็บไซต์) แล้วตรวจสิทธิ์ไมโครโฟนของ Chrome และ Android',
+      'service-not-allowed': 'บริการรู้จำเสียงถูกบล็อกหรือยังไม่ได้รับอนุญาต โปรดลองเปิดลิงก์ใน Chrome โดยตรง และตรวจว่าโทรศัพท์อนุญาตให้ Chrome ใช้ไมโครโฟน',
+      'audio-capture': 'ไม่พบอุปกรณ์รับเสียงหรือไมโครโฟนถูกแอปอื่นใช้งานอยู่ โปรดตรวจการตั้งค่าไมโครโฟนของโทรศัพท์',
+      'no-speech': 'ยังไม่ได้ยินเสียงพูด โปรดลองพูดใกล้ไมโครโฟนอีกครั้ง',
+      'network': 'การเชื่อมต่อบริการรู้จำเสียงมีปัญหา โปรดตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง',
+      'aborted': 'การรับเสียงถูกยกเลิก สามารถกดไมโครโฟนเพื่อเริ่มใหม่ได้'
+    };
+    setSupport(prefix + (guidance[errorCode] || 'โปรดตรวจสิทธิ์ไมโครโฟนและลองใหม่ หรือพิมพ์ข้อมูลแทน'));
+  }
+
+  function resetMicButton(button) {
+    if (!button) return;
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = button.id === 'enableMic' ? '🎙️ ทดสอบไมโครโฟน' : '🎙️';
+  }
+
+  function beginRecognition(button, target, testMode) {
+    if (!SpeechRecognition) {
+      setSupport('Chrome รุ่นนี้ไม่รองรับ Web Speech Recognition กรุณาพิมพ์ข้อมูลแทน');
+      return;
+    }
+    if (activeRecognition) {
+      try { activeRecognition.stop(); } catch (_) {}
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'th-TH';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    activeRecognition = recognition;
+    activeButton = button;
+    button.setAttribute('aria-pressed', 'true');
+    if (testMode) button.textContent = '⏹️ กำลังฟัง…';
+    else button.textContent = '⏹️';
+    setSupport('กำลังฟัง กรุณาพูดภาษาไทย…');
+
+    recognition.onresult = event => {
+      const transcript = event.results && event.results[0] && event.results[0][0]
+        ? event.results[0][0].transcript.trim() : '';
+      if (!transcript) {
+        setSupport('ไม่ได้รับข้อความเสียง กรุณาลองพูดอีกครั้ง');
+        return;
+      }
+      if (testMode) {
+        setSupport('ทดสอบสำเร็จ ระบบได้ยินว่า: “' + transcript + '” ตอนนี้กดไมโครโฟนข้างช่องข้อมูลเพื่อกรอกข้อความได้');
+      } else if (target) {
+        target.value = (target.value ? target.value + ' ' : '') + transcript;
+        target.dispatchEvent(new Event('input', {bubbles:true}));
+        setSupport('รับเสียงเป็นข้อความแล้ว กรุณาตรวจสอบความถูกต้อง');
+      }
+    };
+    recognition.onerror = event => showMicError(event.error || 'unknown');
+    recognition.onend = () => {
+      resetMicButton(button);
+      if (activeRecognition === recognition) activeRecognition = null;
+      if (activeButton === button) activeButton = null;
+    };
+    try {
+      // start() is called synchronously from the actual button click.
+      recognition.start();
+    } catch (error) {
+      resetMicButton(button);
+      activeRecognition = null;
+      activeButton = null;
+      showMicError(error && error.name ? error.name : 'start-failed');
+    }
+  }
+
+  $('enableMic').addEventListener('click', () => beginRecognition($('enableMic'), null, true));
+  document.querySelectorAll('.mic').forEach(button => button.addEventListener('click', () => {
+    beginRecognition(button, $(button.dataset.target), false);
+  }));
+
+  function value(id) { return $(id).value.trim(); }
+  function buildPayload() {
+    return {
+      prefix:value('prefix'), firstName:value('firstName'), lastName:value('lastName'), phone:value('phone'),
+      houseNo:value('houseNo'), moo:value('moo'), road:value('road'), subdistrict:value('subdistrict'),
+      district:value('district'), province:value('province'), postcode:value('postcode'), privacy:value('privacy'),
+      title:value('title'), mainType:value('mainType'), subType:value('subType'), affected:value('affected'),
+      detail:value('detail'), request:value('request'), consent:$('consent').checked, website:value('website')
+    };
+  }
+
+  $('readBack').addEventListener('click', () => {
+    const p = buildPayload();
+    const summary = `ผู้ร้อง ${p.prefix}${p.firstName} ${p.lastName} โทรศัพท์ ${p.phone} ชื่อเรื่อง ${p.title} ประเภท ${p.mainType} ${p.subType} รายละเอียด ${p.detail} ความประสงค์ ${p.request} การเปิดเผยข้อมูล ${p.privacy}`;
+    speak(summary);
+  });
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function printComplaint() {
+    if (!lastSubmittedPayload) return;
+    const p = lastSubmittedPayload;
+    const confidential = p.privacy === 'ปกปิดข้อมูล';
+    const address = [p.houseNo, p.moo ? 'หมู่ ' + p.moo : '', p.road,
+      p.subdistrict ? 'ตำบล' + p.subdistrict : '', p.district ? 'อำเภอ' + p.district : '',
+      p.province, p.postcode].filter(Boolean).join(' ');
+    const popup = window.open('', '_blank');
+    if (!popup) { alert('เบราว์เซอร์ปิดกั้นหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up แล้วกดพิมพ์อีกครั้ง'); return; }
+    popup.document.open();
+    popup.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>เอกสารรับเรื่องร้องทุกข์</title>
+      <style>
+      @page{size:A4;margin:18mm 17mm}*{box-sizing:border-box}body{font-family:Tahoma,"Noto Sans Thai",sans-serif;color:#111;font-size:15px;line-height:1.55}
+      h1{text-align:center;font-size:21px;margin:0 0 3px}h2{font-size:16px;border-bottom:1px solid #333;padding-bottom:4px;margin:18px 0 8px}
+      .agency{text-align:center;margin-bottom:18px}.meta{display:flex;justify-content:space-between;margin:12px 0}.conf{border:2px solid #9b1c1c;color:#9b1c1c;padding:5px 12px;font-weight:bold;display:inline-block}
+      table{width:100%;border-collapse:collapse}td{border:1px solid #777;padding:7px;vertical-align:top}.key{width:24%;font-weight:bold;background:#f3f3f3}.detail{min-height:95px;white-space:pre-wrap}.request{min-height:65px;white-space:pre-wrap}
+      .signatures{display:flex;gap:24px;margin-top:38px}.signatures>div{width:50%;text-align:center}.line{margin-top:48px;border-top:1px dotted #333;padding-top:5px}.foot{font-size:12px;margin-top:22px;color:#444}
+      @media print{button{display:none}}
+      </style></head><body>
+      <div class="agency"><h1>แบบสรุปข้อมูลรับเรื่องร้องทุกข์</h1><div>ศูนย์ดำรงธรรมจังหวัดกำแพงเพชร</div></div>
+      <div class="meta"><span>วันที่รับข้อมูล: ${escapeHtml(lastReceivedAt)}</span><span class="conf">${confidential ? 'ปกปิดข้อมูลผู้ร้อง' : 'เปิดเผยข้อมูลตามที่ผู้ร้องยินยอม'}</span></div>
+      <table>
+      <tr><td class="key">เลขรับเรื่อง</td><td>.................................................................................... <span style="font-size:12px">(เจ้าหน้าที่เขียนกำหนดภายหลัง)</span></td></tr>
+      <tr><td class="key">ชื่อผู้ร้อง</td><td>${escapeHtml(p.prefix)}${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td></tr>
+      <tr><td class="key">หมายเลขโทรศัพท์</td><td>${escapeHtml(p.phone)}</td></tr>
+      <tr><td class="key">ที่อยู่</td><td>${escapeHtml(address || '-')}</td></tr>
+      <tr><td class="key">ผู้ได้รับความเดือดร้อน</td><td>${escapeHtml(p.affected || 'ตนเอง')}</td></tr>
+      <tr><td class="key">ชื่อเรื่อง</td><td>${escapeHtml(p.title)}</td></tr>
+      <tr><td class="key">ประเภทเรื่อง</td><td>${escapeHtml(p.mainType)} / ${escapeHtml(p.subType)}</td></tr>
+      <tr><td class="key">รายละเอียด</td><td class="detail">${escapeHtml(p.detail)}</td></tr>
+      <tr><td class="key">ความประสงค์</td><td class="request">${escapeHtml(p.request)}</td></tr>
+      <tr><td class="key">ช่องทางรับเรื่อง</td><td>Senior Voice Access (เว็บไซต์/แอปพลิเคชัน)</td></tr>
+      </table>
+      <h2>สำหรับเจ้าหน้าที่</h2>
+      <table><tr><td class="key">เจ้าหน้าที่เจ้าของเรื่อง</td><td style="height:35px"></td></tr><tr><td class="key">หมายเหตุ / การดำเนินการเบื้องต้น</td><td style="height:65px"></td></tr></table>
+      <div class="signatures"><div><div class="line">ลงชื่อผู้รับเรื่อง</div></div><div><div class="line">วันที่ ........../........../..........</div></div></div>
+      <div class="foot">เอกสารนี้จัดทำจากข้อมูลที่ผู้ร้องส่งผ่านระบบเพื่อประกอบการตรวจสอบและดำเนินการของเจ้าหน้าที่ ไม่ใช่ใบรับเรื่องที่มีเลขรับเรื่องอย่างเป็นทางการ</div>
+      <script>window.onload=()=>{window.focus();window.print();};<\/script></body></html>`);
+    popup.document.close();
+  }
+  $('printComplaint').addEventListener('click', printComplaint);
+
+  let pendingNonce = null;
+  let pendingTimer = null;
+  let responseFrame = null;
+
+  function setSubmitError(message) {
+    const button = $('submitBtn');
+    button.disabled = false;
+    button.textContent = 'ยืนยันส่งคำร้อง';
+    $('result').className = 'status err';
+    $('result').textContent = message;
+    speak(message);
+  }
+
+  function submitToAppsScript(payload) {
+    if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes('PASTE_YOUR_')) {
+      setSubmitError('ระบบยังไม่ได้ตั้งค่าที่อยู่ปลายทาง กรุณาติดต่อผู้ดูแลระบบ');
+      return;
+    }
+    const nonce = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+    pendingNonce = nonce;
+
+    // Cross-origin HTML form POST avoids fetch/CORS restrictions on Apps Script.
+    if (!responseFrame) {
+      responseFrame = document.createElement('iframe');
+      responseFrame.name = 'seniorVoiceResponseFrame';
+      responseFrame.id = 'seniorVoiceResponseFrame';
+      responseFrame.style.display = 'none';
+      responseFrame.title = 'ผลการส่งข้อมูล';
+      document.body.appendChild(responseFrame);
+    }
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = GAS_WEB_APP_URL;
+    form.target = responseFrame.name;
+    form.style.display = 'none';
+    const payloadInput = document.createElement('input');
+    payloadInput.type = 'hidden';
+    payloadInput.name = 'payload';
+    payloadInput.value = JSON.stringify(payload);
+    const nonceInput = document.createElement('input');
+    nonceInput.type = 'hidden';
+    nonceInput.name = 'nonce';
+    nonceInput.value = nonce;
+    form.append(payloadInput, nonceInput);
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+
+    pendingTimer = window.setTimeout(() => {
+      if (pendingNonce === nonce) {
+        pendingNonce = null;
+        setSubmitError('ยังไม่ได้รับการยืนยันจากระบบปลายทาง โปรดตรวจสอบอินเทอร์เน็ตและติดต่อเจ้าหน้าที่ก่อนส่งซ้ำ');
+      }
+    }, 45000);
+  }
+
+  window.addEventListener('message', event => {
+    const data = event.data;
+    if (!data || data.source !== 'SeniorVoiceAccess' || data.nonce !== pendingNonce) return;
+    pendingNonce = null;
+    if (pendingTimer) window.clearTimeout(pendingTimer);
+    const button = $('submitBtn');
+    button.disabled = false;
+    button.textContent = 'ยืนยันส่งคำร้อง';
+    if (!data.ok) {
+      $('result').className = 'status err';
+      $('result').textContent = data.message || 'ส่งข้อมูลไม่สำเร็จ กรุณาติดต่อเจ้าหน้าที่';
+      speak($('result').textContent);
+      return;
+    }
+    const submittedPayload = buildPayload();
+    $('result').className = 'status ok';
+    $('result').textContent = `${data.result.message} วันที่และเวลา ${data.result.receivedAt}`;
+    lastSubmittedPayload = submittedPayload;
+    lastReceivedAt = data.result.receivedAt;
+    $('printActions').hidden = false;
+    speak(data.result.message + ' วันที่และเวลา ' + data.result.receivedAt);
+    $('complaintForm').reset();
+    $('province').value = 'กำแพงเพชร';
+  });
+
+  $('complaintForm').addEventListener('submit', event => {
+    event.preventDefault();
+    if (!$('complaintForm').reportValidity()) return;
+    if (!confirm('ท่านตรวจสอบข้อมูลแล้วและประสงค์ส่งคำร้องใช่หรือไม่?')) return;
+    const button = $('submitBtn');
+    const submittedPayload = buildPayload();
+    button.disabled = true;
+    button.textContent = 'กำลังส่งข้อมูล…';
+    $('result').className = 'status';
+    $('result').textContent = '';
+    submitToAppsScript(submittedPayload);
+  });
+
+  window.addEventListener('load', () => {
+    setSupport();
+    if (!SpeechRecognition) {
+      $('support').textContent = 'เบราว์เซอร์นี้ไม่รองรับการรู้จำเสียง กรุณาใช้ Chrome รุ่นปัจจุบันหรือพิมพ์ข้อมูลแทน';
+    }
+  });
+</script>
+</body>
+</html>
