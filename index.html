@@ -37,6 +37,8 @@
     <select id="prefix" required><option value="">เลือกคำนำหน้า</option><option>นาย</option><option>นาง</option><option>นางสาว</option><option>อื่น ๆ</option></select>
     <label for="firstName">ชื่อ *</label><div class="fieldrow"><input id="firstName" autocomplete="given-name" required><button class="mic" type="button" data-target="firstName" aria-label="พูดชื่อ">🎙️</button></div>
     <label for="lastName">นามสกุล *</label><div class="fieldrow"><input id="lastName" autocomplete="family-name" required><button class="mic" type="button" data-target="lastName" aria-label="พูดนามสกุล">🎙️</button></div>
+    <label for="age">อายุ (ปี)</label><input id="age" type="number" inputmode="numeric" min="1" max="120" placeholder="ระบุอายุ (ถ้าสะดวก)">
+    <label for="occupation">อาชีพ</label><div class="fieldrow"><input id="occupation" placeholder="ระบุอาชีพ (ถ้าสะดวก)"><button class="mic" type="button" data-target="occupation" aria-label="พูดอาชีพ">🎙️</button></div>
     <label for="phone">หมายเลขโทรศัพท์ *</label><input id="phone" type="tel" inputmode="numeric" maxlength="10" placeholder="0XXXXXXXXX" required><p class="hint">ใช้สำหรับติดต่อกลับ โปรดตรวจสอบหมายเลขให้ถูกต้อง</p>
 
     <h2 style="margin-top:24px">ที่อยู่และสถานที่เกิดเหตุ</h2>
@@ -180,7 +182,7 @@
   function value(id) { return $(id).value.trim(); }
   function buildPayload() {
     return {
-      prefix:value('prefix'), firstName:value('firstName'), lastName:value('lastName'), phone:value('phone'),
+      prefix:value('prefix'), firstName:value('firstName'), lastName:value('lastName'), age:value('age'), occupation:value('occupation'), phone:value('phone'),
       houseNo:value('houseNo'), moo:value('moo'), road:value('road'), subdistrict:value('subdistrict'),
       district:value('district'), province:value('province'), postcode:value('postcode'), privacy:value('privacy'),
       title:value('title'), mainType:value('mainType'), subType:value('subType'), affected:value('affected'),
@@ -190,7 +192,7 @@
 
   $('readBack').addEventListener('click', () => {
     const p = buildPayload();
-    const summary = `ผู้ร้อง ${p.prefix}${p.firstName} ${p.lastName} โทรศัพท์ ${p.phone} ชื่อเรื่อง ${p.title} ประเภท ${p.mainType} ${p.subType} รายละเอียด ${p.detail} ความประสงค์ ${p.request} การเปิดเผยข้อมูล ${p.privacy}`;
+    const summary = `ผู้ร้อง ${p.prefix}${p.firstName} ${p.lastName} อายุ ${p.age || 'ไม่ระบุ'} อาชีพ ${p.occupation || 'ไม่ระบุ'} โทรศัพท์ ${p.phone} ชื่อเรื่อง ${p.title} ประเภท ${p.mainType} ${p.subType} รายละเอียด ${p.detail} ความประสงค์ ${p.request} การเปิดเผยข้อมูล ${p.privacy}`;
     speak(summary);
   });
 
@@ -222,6 +224,8 @@
       <table>
       <tr><td class="key">เลขรับเรื่อง</td><td>.................................................................................... <span style="font-size:12px">(เจ้าหน้าที่เขียนกำหนดภายหลัง)</span></td></tr>
       <tr><td class="key">ชื่อผู้ร้อง</td><td>${escapeHtml(p.prefix)}${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</td></tr>
+      <tr><td class="key">อายุ</td><td>${escapeHtml(p.age || '-')}</td></tr>
+      <tr><td class="key">อาชีพ</td><td>${escapeHtml(p.occupation || '-')}</td></tr>
       <tr><td class="key">หมายเลขโทรศัพท์</td><td>${escapeHtml(p.phone)}</td></tr>
       <tr><td class="key">ที่อยู่</td><td>${escapeHtml(address || '-')}</td></tr>
       <tr><td class="key">ผู้ได้รับความเดือดร้อน</td><td>${escapeHtml(p.affected || 'ตนเอง')}</td></tr>
